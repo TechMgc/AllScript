@@ -4,6 +4,7 @@ export blue='\033[34m'
 export red='\033[31m'
 export yellow='\033[33m'
 export green='\033[32m'
+export cyan='\033[36m'
 export reset_color='\033[0m'
 
 #初始化系统
@@ -491,13 +492,13 @@ installAlist() {
 }
 
 while true; do
-    echo -e "${blue}******************** All In One 脚本 ********************${reset_color}"
-    echo -e "${blue}*                   1.初始化系统${reset_color}"         
-    echo -e "${blue}*                   2.Xray节点搭建${reset_color}"
-    echo -e "${blue}*                   3.Alist搭建${reset_color}"
-    echo -e "${blue}*                   4.退出${reset_color}"
-    echo -e "${blue}*********************************************************${reset_color}"
-    echo -n -e "${blue}请选择: ${reset_color}"
+    echo -e "${cyan}******************** All In One 脚本 ********************${reset_color}"
+    echo -e "${cyan}*                   1.初始化系统${reset_color}"         
+    echo -e "${cyan}*                   2.Xray节点搭建${reset_color}"
+    echo -e "${cyan}*                   3.Alist搭建${reset_color}"
+    echo -e "${cyan}*                   4.退出${reset_color}"
+    echo -e "${cyan}*********************************************************${reset_color}"
+    echo -n -e "${cyan}请选择: ${reset_color}"
     read option
     case ${option} in
     1)
