@@ -282,14 +282,13 @@ rm cloudreve_3.8.3_linux_amd64.tar.gz
 
 mkdir /usr/local/etc/ssl
 #检测acme
-if command -v acme &> /dev/null
+if command -v ~/.acme.sh/acme.sh &> /dev/null
 then
-    echo -e "${cyan}acme 已安装，跳过... ${reset_color}"
+    echo -e "${cyan}acme已安装，跳过... ${reset_color}"
 else
     curl https://get.acme.sh | sh
-    alias acme=~/.acme.sh/acme.sh
-    acme --set-default-ca --server letsencrypt
-    acme --upgrade --auto-upgrade
+    ~/.acme.sh/acme.sh --set-default-ca --server letsencrypt
+    ~/.acme.sh/acme.sh --upgrade --auto-upgrade
 fi
 #设置dns服务商
 echo -e "${cyan} 请选择域名DNS服务商: ${reset_color}"
@@ -310,8 +309,8 @@ case $choice in
         export DP_Key="$key"
         echo -n -e "${cyan} 请输入域名: ${reset_color}"
         read domain
-        acme --issue --dns dns_dp -d $domain -k ec-256
-        acme --install-cert -d $domain --ecc \
+        ~/.acme.sh/acme.sh --issue --dns dns_dp -d $domain -k ec-256
+        ~/.acme.sh/acme.sh --install-cert -d $domain --ecc \
             --fullchain-file /usr/local/etc/ssl/xray.crt \
             --key-file /usr/local/etc/ssl/xray.key --reloadcmd "systemctl force-reload xray"
         ;;
@@ -325,8 +324,8 @@ case $choice in
         export CF_Email="$email"
         echo -n -e "${cyan} 请输入域名: ${reset_color}"
         read domain
-        acme --issue --dns dns_cf -d $domain -k ec-256
-        acme --install-cert -d $domain --ecc \
+        ~/.acme.sh/acme.sh --issue --dns dns_cf -d $domain -k ec-256
+        ~/.acme.sh/acme.sh --install-cert -d $domain --ecc \
             --fullchain-file /usr/local/etc/ssl/xray.crt \
             --key-file /usr/local/etc/ssl/xray.key --reloadcmd "systemctl force-reload xray"
         ;;
@@ -340,8 +339,8 @@ case $choice in
         export Ali_Secret="$secret"
         echo -n -e "${cyan} 请输入域名: ${reset_color}"
         read domain
-        acme --issue --dns dns_ali -d $domain -k ec-256
-        acme --install-cert -d $domain --ecc \
+        ~/.acme.sh/acme.sh --issue --dns dns_ali -d $domain -k ec-256
+        ~/.acme.sh/acme.sh --install-cert -d $domain --ecc \
             --fullchain-file /usr/local/etc/ssl/xray.crt \
             --key-file /usr/local/etc/ssl/xray.key --reloadcmd "systemctl force-reload xray"
         ;;
@@ -352,8 +351,8 @@ case $choice in
         export GOOGLEDOMAINS_ACCESS_TOKEN="$api"
         echo -n -e "${cyan} 请输入域名: ${reset_color}"
         read domain
-        acme --issue --dns dns_googledomains -d $domain -k ec-256
-        acme --install-cert -d $domain --ecc \
+        ~/.acme.sh/acme.sh --issue --dns dns_googledomains -d $domain -k ec-256
+        ~/.acme.sh/acme.sh --install-cert -d $domain --ecc \
             --fullchain-file /usr/local/etc/ssl/xray.crt \
             --key-file /usr/local/etc/ssl/xray.key --reloadcmd "systemctl force-reload xray"
         ;;
