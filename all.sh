@@ -20,7 +20,7 @@ if [[ "$ID" == "centos"* ]]; then
     packages=("nginx" "socat" "curl" "gnupg" "sudo")
     for pkg in "${packages[@]}"; do
         if ! rpm -q "$pkg" &>/dev/null; then
-            sudo yum install "$pkg" -y
+            yum install "$pkg" -y
         fi
     done
     systemctl start nginx
