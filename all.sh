@@ -39,11 +39,6 @@ installXray() {
     export warpport=""
     export uuid=""
     export domain=""
-    export blue='\033[34m'
-    export red='\033[31m'
-    export yellow='\033[33m'
-    export green='\033[32m'
-    export reset_color='\033[0m'
     xray(){
         #安装xray
         bash -c "$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release.sh)" @ install -u root
