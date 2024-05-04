@@ -1,22 +1,61 @@
 #!/bin/bash
 
-#更新系统
-apt-get update -y
+export blue='\033[34m'
+export red='\033[31m'
+export yellow='\033[33m'
+export green='\033[32m'
+export reset_color='\033[0m'
 
-#安装依赖
-apt install -y sudo nginx socat curl gnupg
-systemctl enable nginx
+#初始化系统
+initialization() {
 
-#安装xray
-bash -c "$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release.sh)" @ install -u root
+# 检测操作系统类型
+if [[ -f /etc/os-release ]]; then
+    . /etc/os-release
+fi
 
-# 删除config.json文件中的所有内容
-> /usr/local/etc/xray/config.json
+#安装基础软件
+if [[ "$ID" == "centos"* ]]; then
+    sudo yum update -y
+    sudo yum install nginx socat curl gnupg -y
+    sudo systemctl start nginx
+    sudo systemctl enable nginx       
+elif [[ "$ID" == "debian"* ]]; then
+    sudo apt-get update -y
+    sudo apt-get install nginx socat curl gnupg -y
+    sudo systemctl enable nginx
+elif [[ "$ID" == "ubuntu"* ]]; then
+    sudo apt-get update -y
+    sudo apt-get install nginx socat curl gnupg -y
+    sudo systemctl enable nginx
+else
+    echo -e "${red} 该脚本仅支持 CentOS、Debian 和 Ubuntu ${reset_color}"
+    exit 1
+fi
+}
 
-#配置config.json
-uuid=$(xray uuid)
-read -p "请输入Warp端口号：" warpport
-cat << EOF >> /usr/local/etc/xray/config.json
+#xray搭建
+installXray() {
+    export warpport=""
+    export uuid=""
+    export domain=""
+    xray(){
+        #安装xray
+        bash -c "$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release.sh)" @ install -u root
+
+        # 删除config.json文件中的所有内容
+        > /usr/local/etc/xray/config.json
+
+        #配置config.json
+        uuid=$(xray uuid)
+        echo -n -e "${blue}是否需要安装Warp？(输入 y 或 n): ${reset_color}"
+        read install_warp
+
+        if [ "$install_warp" = "y" ]; then
+        echo -n -e "${blue}请输入Warp端口号: ${reset_color}"
+        read warpport
+        fi
+        cat << EOF >> /usr/local/etc/xray/config.json
 {
     "log": {
         "loglevel": "warning"
@@ -36,8 +75,8 @@ cat << EOF >> /usr/local/etc/xray/config.json
 	            "type": "field",
 	            "domain": [
 	            	"geosite:openai",
-		        "geosite:disney",
-		        "geosite:netflix"
+		            "geosite:disney",
+		            "geosite:netflix"
 	            ],
 	            "outboundTag": "warp"
             }
@@ -81,8 +120,8 @@ cat << EOF >> /usr/local/etc/xray/config.json
                     "certificates": [
                         {
                             "ocspStapling": 3600,
-                            "certificateFile": "/usr/local/etc/xray_cert/xray.crt",
-                            "keyFile": "/usr/local/etc/xray_cert/xray.key"
+                            "certificateFile": "/usr/local/etc/ssl/xray.crt",
+                            "keyFile": "/usr/local/etc/ssl/xray.key"
                         }
                     ]
                 }
@@ -120,71 +159,97 @@ cat << EOF >> /usr/local/etc/xray/config.json
 }
 EOF
 
-# 安装WARP
-curl https://pkg.cloudflareclient.com/pubkey.gpg | sudo gpg --yes --dearmor --output /usr/share/keyrings/cloudflare-warp-archive-keyring.gpg
-echo "deb [arch=amd64 signed-by=/usr/share/keyrings/cloudflare-warp-archive-keyring.gpg] https://pkg.cloudflareclient.com/ $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/cloudflare-client.list
-sudo apt-get update
-sudo apt-get install cloudflare-warp -y
-echo "请输入Warp登陆模式:"
-read -p "1: Warp+ Key, 2: Zero Trust: " choice
+        # 安装WARP
+        if [ "$install_warp" = "y" ]; then
+            if [[ -f /etc/os-release ]]; then
+            . /etc/os-release
+            fi
+            if [[ "$ID" == "debian"* ]]; then
+                curl -fsSL https://pkg.cloudflareclient.com/pubkey.gpg | sudo gpg --yes --dearmor --output /usr/share/keyrings/cloudflare-warp-archive-keyring.gpg
+                echo "deb [signed-by=/usr/share/keyrings/cloudflare-warp-archive-keyring.gpg] https://pkg.cloudflareclient.com/ $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/cloudflare-client.list
+                sudo apt-get update
+                sudo apt-get install cloudflare-warp -y
+            elif [[ "$ID" == "ubuntu"* ]]; then
+                curl -fsSL https://pkg.cloudflareclient.com/pubkey.gpg | sudo gpg --yes --dearmor --output /usr/share/keyrings/cloudflare-warp-archive-keyring.gpg
+                echo "deb [signed-by=/usr/share/keyrings/cloudflare-warp-archive-keyring.gpg] https://pkg.cloudflareclient.com/ $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/cloudflare-client.list
+                sudo apt-get update
+                sudo apt-get install cloudflare-warp -y
+            elif [[ "$ID" == "centos"* ]]; then
+                curl -fsSl https://pkg.cloudflareclient.com/cloudflare-warp-ascii.repo | sudo tee /etc/yum.repos.d/cloudflare-warp.repo
+                sudo yum update
+                sudo yum install cloudflare-warp -y
+            else
+                echo -e "${red} 该脚本仅支持 CentOS、Debian 和 Ubuntu ${reset_color}"
+                exit 1
+            fi
+    
+            echo -e "${blue} 请输入Warp登陆模式: ${reset_color}"
+            echo -e "${green} 1: Warp+ Key ${reset_color}" 
+            echo -e "${green} 2: Zero Trust ${reset_color}"
+            echo -n -e "${blue} 请选择: ${reset_color}"
+            read choice
 
-case $choice in
-    1)
-        echo "您选择了 Warp+ Key"
-        warp-cli register
-        read -p "请输入Warp+ Key：" warpkey
-        warp-cli set-license $warpkey
-        warp-cli set-mode proxy
-        warp-cli set-proxy-port $warpport
-        warp-cli connect
-        ;;
-    2)
-        echo "您选择了 Zero Trust"
-	read -p "请输入您的团队名：" teamname
-        warp-cli teams-enroll $teamname
-	echo "***********************************************************************"
-	echo "复制 “A browser window should open at the following URL:” 下面的链接在浏览器中打开"
-        echo "***********************************************************************"
-	echo "在成功页面上，右键单击并选择“查看页面源”,复制URL字段：com.cloudflare.warp....."
-        echo "***********************************************************************"
-        read -p "请输入token：" token
-        warp-cli teams-enroll-token $token
-        warp-cli connect
-	warp-cli account
-        ;;
-    *)
-        echo "无效的选择"
-        ;;
-esac
+            case $choice in
+                1)
+                    echo -e "${green} 您选择了 Warp+ Key ${reset_color}"
+                    warp-cli register
+                    echo -n -e "${blue}请输入Warp+ Key: ${reset_color}"
+                    read warpkey
+                    warp-cli set-license $warpkey
+                    warp-cli set-mode proxy
+                    warp-cli set-proxy-port $warpport
+                    warp-cli connect
+                    ;;
+                2)
+                    echo -e "${green} 您选择了 Zero Trust ${reset_color}"
+                    echo -n -e "${blue} 请输入您的团队名: ${reset_color}"
+                    read teamname
+                    warp-cli teams-enroll $teamname
+                    echo -e "${green}******************************************************************************${reset_color}"
+                    echo -e "${blue}复制 “A browser window should open at the following URL:” 下面的链接在浏览器中打开${reset_color}"
+                    echo -e "${green}******************************************************************************${reset_color}"
+                    echo -e "${blue}在成功页面上，右键单击并选择“查看页面源”,复制URL字段：com.cloudflare.warp.....${reset_color}"
+                    echo -e "${green}******************************************************************************${reset_color}"
+                    echo -n -e "${blue}请输入token: ${reset_color}"
+                    read token
+                    warp-cli teams-enroll-token $token
+                    warp-cli connect
+                    warp-cli account
+                    ;;
+                *)
+                    echo -e "${red} 无效的选择 ${reset_color}"
+                    ;;
+            esac
+        fi
+    }
+    cloudreve() {
+        mkdir /usr/local/etc/cloudreve
+        wget https://github.com/cloudreve/Cloudreve/releases/download/3.8.3/cloudreve_3.8.3_linux_amd64.tar.gz
+        tar -zxvf cloudreve_3.8.3_linux_amd64.tar.gz -C /usr/local/etc/cloudreve/
+        chmod +x /usr/local/etc/cloudreve/cloudreve
+        flag=false
+        /usr/local/etc/cloudreve/cloudreve > /usr/local/etc/cloudreve/output.txt & cloudreve_pid=$!
+        sleep 5
+        if [ "$flag" = true ]; then
+        kill $cloudreve_pid
+        fi
 
-# 安装Cloudreve
-mkdir /usr/local/etc/cloudreve
-wget https://github.com/cloudreve/Cloudreve/releases/download/3.8.3/cloudreve_3.8.3_linux_amd64.tar.gz
-tar -zxvf cloudreve_3.8.3_linux_amd64.tar.gz -C /usr/local/etc/cloudreve/
-chmod +x /usr/local/etc/cloudreve/cloudreve
-flag=false
-/usr/local/etc/cloudreve/cloudreve > /usr/local/etc/cloudreve/output.txt & cloudreve_pid=$!
-sleep 5
-if [ "$flag" = true ]; then
-kill $cloudreve_pid
-fi
+        # 获取Cloudreve初始管理员账号、密码和端口号
+        admin_user=$(grep -oP 'Admin user name: \K\S+' /usr/local/etc/cloudreve/output.txt)
+        admin_pass=$(grep -oP 'Admin password: \K\S+' /usr/local/etc/cloudreve/output.txt)
+        admin_port=$(grep -oP 'Listening to \K\S+' /usr/local/etc/cloudreve/output.txt)
 
-# 获取Cloudreve初始管理员账号、密码和端口号
-admin_user=$(grep -oP 'Admin user name: \K\S+' /usr/local/etc/cloudreve/output.txt)
-admin_pass=$(grep -oP 'Admin password: \K\S+' /usr/local/etc/cloudreve/output.txt)
-admin_port=$(grep -oP 'Listening to \K\S+' /usr/local/etc/cloudreve/output.txt)
+        # 输出默认账号、密码和端口号
+        echo -e "${green}*********************************${reset_color}"
+        echo -e "${blue}初始管理员账号：$admin_user${reset_color}"
+        echo -e "${blue}初始管理员密码：$admin_pass${reset_color}"
+        echo -e "${blue}初始端口号：$admin_port${reset_color}"
+        echo -e "${green}*********************************${reset_color}"
+        echo -e "${blue}请保存账号、密码、端口号后按回车键继续...${reset_color}"
+        read -p ""
 
-# 输出默认账号、密码和端口号
-echo "***********************************************************************"
-echo "*                 初始管理员账号：$admin_user"
-echo "*                 初始管理员密码：$admin_pass"
-echo "*                 初始端口号：$admin_port"
-echo "***********************************************************************"
-echo "请记下账号、密码、端口号后按回车键继续..."
-read -p ""
-
-# 配置Cloudreve systemd服务
-cat << EOF >> /usr/lib/systemd/system/cloudreve.service
+        # 配置Cloudreve systemd服务
+        cat << EOF >> /usr/lib/systemd/system/cloudreve.service
 [Unit]
 Description=Cloudreve
 Documentation=https://docs.cloudreve.org
@@ -206,39 +271,103 @@ StandardError=syslog
 WantedBy=multi-user.target
 EOF
 
-systemctl daemon-reload
-systemctl enable cloudreve
-systemctl start cloudreve
+        systemctl daemon-reload
+        systemctl enable cloudreve
+        systemctl start cloudreve
     
-#删除output.txt
-rm /usr/local/etc/cloudreve/output.txt
+        #删除output.txt
+        rm /usr/local/etc/cloudreve/output.txt
     
-#删除cloudreve tar包
-rm cloudreve_3.8.3_linux_amd64.tar.gz
-
-# 安装BBR
-echo "net.core.default_qdisc=fq" >> /etc/sysctl.conf
-echo "net.ipv4.tcp_congestion_control=bbr" >> /etc/sysctl.conf
-sysctl -p
-
-#安装acme
-curl https://get.acme.sh | sh
-.acme.sh/acme.sh --set-default-ca --server letsencrypt
-
-#申请证书和安装证书
-mkdir /usr/local/etc/xray_cert
-read -p "输入您的域名：" domain
-.acme.sh/acme.sh --issue -d $domain -k ec-256 --webroot /var/www/html
-.acme.sh/acme.sh --install-cert -d $domain --ecc \
-    --fullchain-file /usr/local/etc/xray_cert/xray.crt \
-    --key-file /usr/local/etc/xray_cert/xray.key --reloadcmd "systemctl force-reload xray"
-chmod +r /usr/local/etc/xray_cert/xray.key
-.acme.sh/acme.sh --upgrade --auto-upgrade
-
-#配置nginx.conf
-# 删除nginx.conf文件中的所有内容
-> /etc/nginx/nginx.conf
-cat << EOF >> /etc/nginx/nginx.conf
+        #删除cloudreve tar包
+        rm cloudreve_3.8.3_linux_amd64.tar.gz
+    }
+    ssl() {
+        mkdir /usr/local/etc/ssl
+        #检测acme
+        if command -v acme &> /dev/null
+        then
+            echo -e "${blue}acme 已安装，跳过... ${reset_color}"
+        else
+            curl https://get.acme.sh | sh
+            alias acme=~/.acme.sh/acme.sh
+            acme --set-default-ca --server letsencrypt
+            acme --upgrade --auto-upgrade
+        fi
+        #设置dns服务商
+        echo -e "${blue} 请选择域名DNS服务商: ${reset_color}"
+        echo -e "${green} 1: Dnspod ${reset_color}"
+        echo -e "${green} 2: Cloudflare ${reset_color}"
+        echo -e "${green} 3: Aliyun ${reset_color}"
+        echo -e "${green} 4: Google ${reset_color}"
+        echo -n -e "${blue} 请选择: ${reset_color}"
+        read choice
+        case $choice in
+            1)
+                echo -e "${green} 您选择了Dnspod ${reset_color}"
+                echo -n -e "${blue}请输入ID: ${reset_color}"
+                read id
+                echo -n -e "${blue}请输入KEY: ${reset_color}"
+                read key
+                export DP_Id="$id"
+                export DP_Key="$key"
+                echo -n -e "${blue} 请输入域名: ${reset_color}"
+                read domain
+                acme --issue --dns dns_dp -d $domain -k ec-256
+                acme --install-cert -d $domain --ecc \
+                    --fullchain-file /usr/local/etc/ssl/xray.crt \
+                    --key-file /usr/local/etc/ssl/xray.key --reloadcmd "systemctl force-reload xray"
+                ;;
+            2)
+                echo -e "${green} 您选择了Cloudflare ${reset_color}"
+                echo -n -e "${blue}请输入KEY: ${reset_color}"
+                read key
+                echo -n -e "${blue}请输入EMAIL: ${reset_color}"
+                read email
+                export CF_Key="$key"
+                export CF_Email="$email"
+                echo -n -e "${blue} 请输入域名: ${reset_color}"
+                read domain
+                acme --issue --dns dns_cf -d $domain -k ec-256
+                acme --install-cert -d $domain --ecc \
+                    --fullchain-file /usr/local/etc/ssl/xray.crt \
+                    --key-file /usr/local/etc/ssl/xray.key --reloadcmd "systemctl force-reload xray"
+                ;;
+            3)
+                echo -e "${green} 您选择了Aliyun ${reset_color}"
+                echo -n -e "${blue}请输入KEY: ${reset_color}"
+                read key
+                echo -n -e "${blue}请输入SECRET: ${reset_color}"
+                read secret
+                export Ali_Key="$key"
+                export Ali_Secret="$secret"
+                echo -n -e "${blue} 请输入域名: ${reset_color}"
+                read domain
+                acme --issue --dns dns_ali -d $domain -k ec-256
+                acme --install-cert -d $domain --ecc \
+                    --fullchain-file /usr/local/etc/ssl/xray.crt \
+                    --key-file /usr/local/etc/ssl/xray.key --reloadcmd "systemctl force-reload xray"
+                ;;
+            4)
+                echo -e "${green} 您选择了Google ${reset_color}"
+                echo -n -e "${blue}请输入API令牌: ${reset_color}"
+                read api
+                export GOOGLEDOMAINS_ACCESS_TOKEN="$api"
+                echo -n -e "${blue} 请输入域名: ${reset_color}"
+                read domain
+                acme --issue --dns dns_googledomains -d $domain -k ec-256
+                acme --install-cert -d $domain --ecc \
+                    --fullchain-file /usr/local/etc/ssl/xray.crt \
+                    --key-file /usr/local/etc/ssl/xray.key --reloadcmd "systemctl force-reload xray"
+                ;;
+            *)
+                echo -e "${red} 无效的选择 ${reset_color}"
+                ;;
+        esac
+    }
+    #nginx反代
+    nginx() {
+        > /etc/nginx/nginx.conf
+        cat << EOF >> /etc/nginx/nginx.conf
 user www-data;
 worker_processes auto;
 pid /run/nginx.pid;
@@ -294,17 +423,89 @@ http {
 }
 EOF
 
+# 安装BBR
+echo "net.core.default_qdisc=fq" >> /etc/sysctl.conf
+echo "net.ipv4.tcp_congestion_control=bbr" >> /etc/sysctl.conf
+sysctl -p
+
 #重启服务
 systemctl restart nginx
 systemctl restart xray
 systemctl restart cloudreve
 
 encoded_uuid=$(echo -n "auto:$uuid@$domain:443" | base64)
-echo "*************************************************************************************"
-echo "warp端口号：$warpport"
-echo "Zero Trust代理及端口号修改步骤：Zero Trust - Settings - WARP Client - Device settings(点击Default后面三个点，选择Configure) - Service mode(代理选择Proxy mode 端口号修改Port: Edit)"
-echo "*************************************************************************************"
-echo "Shadowrocket链接：vless://$encoded_uuid?obfs=none&tls=1&peer=$domain&xtls=2"
-echo "*************************************************************************************"
-echo "Passwall链接：vless://$uuid@$domain:443?headerType=none&type=tcp&encryption=none&fp=randomized&flow=xtls-rprx-vision&security=tls&sni=$domain#备注"
-echo "*************************************************************************************"
+echo -e "${green}*************************************************************************************${reset_color}"
+echo -e "${blue}warp端口号：$warpport${reset_color}"
+echo -e "${blue}Zero Trust代理及端口号修改步骤：Zero Trust - Settings - WARP Client - Device settings(点击Default后面三个点，选择Configure) - Service mode(代理选择Proxy mode 端口号修改Port: Edit)${reset_color}"
+echo -e "${green}*************************************************************************************${reset_color}"
+echo -e "${blue}Shadowrocket链接：vless://$encoded_uuid?obfs=none&tls=1&peer=$domain&xtls=2${reset_color}"
+echo -e "${green}*************************************************************************************${reset_color}"
+echo -e "${blue}Passwall链接：vless://$uuid@$domain:443?headerType=none&type=tcp&encryption=none&fp=randomized&flow=xtls-rprx-vision&security=tls&sni=$domain#备注${reset_color}"
+echo -e "${green}*************************************************************************************${reset_color}"
+    }
+
+while true; do
+    echo -e "${blue}******************** Xray搭建 ********************${reset_color}"
+    echo -e "${blue}*                   1.Xray安装${reset_color}"         
+    echo -e "${blue}*                   2.安装Cloudreve伪装${reset_color}"
+    echo -e "${blue}*                   3.SSL证书申请${reset_color}"
+    echo -e "${blue}*                   4.Nginx反代配置${reset_color}"
+    echo -e "${blue}*                   5.返回主菜单${reset_color}"
+    echo -e "${blue}**************************************************${reset_color}"
+    echo -n -e "${blue}请选择: ${reset_color}"
+    read option
+    case ${option} in
+    1)
+        xray
+        ;;
+    2)
+        cloudreve
+        ;;
+    3)
+        ssl
+        ;;
+    4)
+        nginx
+        ;;
+    5)
+        break
+        ;;
+    *)
+        echo -e "${red}无效的选择，请重新输入! ${reset_color}"
+        ;;
+    esac
+done
+}
+
+#安装Alist
+installAlist() {
+    curl -fsSL "https://alist.nn.ci/v3.sh" | bash -s install
+}
+
+while true; do
+    echo -e "${blue}******************** All In One 脚本 ********************${reset_color}"
+    echo -e "${blue}*                   1.初始化系统${reset_color}"         
+    echo -e "${blue}*                   2.Xray节点搭建${reset_color}"
+    echo -e "${blue}*                   3.Alist搭建${reset_color}"
+    echo -e "${blue}*                   4.退出${reset_color}"
+    echo -e "${blue}*********************************************************${reset_color}"
+    echo -n -e "${blue}请选择: ${reset_color}"
+    read option
+    case ${option} in
+    1)
+        initialization
+        ;;
+    2)
+        installXray
+        ;;
+    3)
+        installAlist
+        ;;
+    4)
+        exit 0
+        ;;
+    *)
+        echo -e "${red}无效的选择，请重新输入！${reset_color}"
+        ;;
+    esac
+done
