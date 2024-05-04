@@ -51,11 +51,11 @@ xray(){
 
 #配置config.json
 uuid=$(xray uuid)
-echo -e "${blue} 是否需要安装Warp？(输入 y 或 n): ${reset_color}"
+echo -n "是否需要安装Warp？(输入 y 或 n): "
 read install_warp
 
 if [ "$install_warp" = "y" ]; then
-echo -e "${blue} 请输入Warp端口号: ${reset_color}"
+echo -n "请输入Warp端口号: "
 read warpport
 fi
 # 删除config.json文件中的所有内容
