@@ -50,13 +50,13 @@ xray(){
 #bash -c "$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release.sh)" @ install -u root
 
 #配置config.json
-echo -n -e "${blue}是否需要安装Warp？(输入 y 或 n): ${reset_color}"
-read -r install_warp
+echo "是否需要安装Warp？(输入 y 或 n): "
+read install_warp
 
 # 如果用户输入'y'，则提示输入Warp端口号，并读取输入
 if [ "$install_warp" = "y" ]; then
-    echo -n -e "${blue}请输入Warp端口号: ${reset_color}"
-    read -r warpport
+    echo "请输入Warp端口号: "
+    read -warpport
 fi
 uuid=$(xray uuid)
 # 删除config.json文件中的所有内容
