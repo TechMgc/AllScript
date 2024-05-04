@@ -45,22 +45,17 @@ installXray() {
 export warpport=""
 export uuid=""
 export domain=""
-export blue='\033[34m'
-export red='\033[31m'
-export yellow='\033[33m'
-export green='\033[32m'
-export reset_color='\033[0m'
 xray(){
 #安装xray
 #bash -c "$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release.sh)" @ install -u root
 
 #配置config.json
 uuid=$(xray uuid)
-echo -n -e "${blue} 是否需要安装Warp？(输入 y 或 n): ${reset_color}"
+echo -e "${blue} 是否需要安装Warp？(输入 y 或 n): ${reset_color}"
 read install_warp
 
 if [ "$install_warp" = "y" ]; then
-echo -n -e "${blue} 请输入Warp端口号: ${reset_color}"
+echo -e "${blue} 请输入Warp端口号: ${reset_color}"
 read warpport
 fi
 # 删除config.json文件中的所有内容
