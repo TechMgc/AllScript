@@ -47,15 +47,15 @@ export uuid=""
 export domain=""
 xray(){
 #安装xray
-bash -c "$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release.sh)" @ install -u root
+#bash -c "$(curl -L https://github.com/XTLS/Xray-install/raw/main/install-release.sh)" @ install -u root
 
 #配置config.json
 uuid=$(xray uuid)
-echo -n "是否需要安装Warp？(输入 y 或 n): "
+echo "是否需要安装Warp？(输入 y 或 n): "
 read install_warp
 
 if [ "$install_warp" = "y" ]; then
-echo -n "请输入Warp端口号: "
+echo "请输入Warp端口号: "
 read warpport
 fi
 # 删除config.json文件中的所有内容
