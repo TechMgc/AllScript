@@ -5,6 +5,7 @@ export red='\033[31m'
 export yellow='\033[33m'
 export green='\033[32m'
 export cyan='\033[36m'
+export magenta='\033[35m'
 export reset_color='\033[0m'
 
 #初始化系统
@@ -454,14 +455,14 @@ echo -e "${green}***************************************************************
 }
 
 while true; do
-    echo -e "${blue}******************** Xray搭建 ********************${reset_color}"
-    echo -e "${blue}*                   1.Xray安装${reset_color}"         
-    echo -e "${blue}*                   2.安装Cloudreve伪装${reset_color}"
-    echo -e "${blue}*                   3.SSL证书申请${reset_color}"
-    echo -e "${blue}*                   4.Nginx反代配置${reset_color}"
-    echo -e "${blue}*                   5.返回主菜单${reset_color}"
-    echo -e "${blue}**************************************************${reset_color}"
-    echo -n -e "${blue}请选择: ${reset_color}"
+    echo -e "${magenta}******************** Xray搭建 ********************${reset_color}"
+    echo -e "${magenta}*                   1.Xray安装${reset_color}"         
+    echo -e "${magenta}*                   2.安装Cloudreve伪装${reset_color}"
+    echo -e "${magenta}*                   3.SSL证书申请${reset_color}"
+    echo -e "${magenta}*                   4.Nginx反代配置${reset_color}"
+    echo -e "${magenta}*                   5.返回主菜单${reset_color}"
+    echo -e "${magenta}**************************************************${reset_color}"
+    echo -n -e "${magenta}请选择: ${reset_color}"
     read option
     case ${option} in
     1)
