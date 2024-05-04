@@ -16,18 +16,24 @@ fi
 
 #安装基础软件
 if [[ "$ID" == "centos"* ]]; then
-    sudo yum update -y
-    sudo yum install nginx socat curl gnupg -y
-    sudo systemctl start nginx
-    sudo systemctl enable nginx       
-elif [[ "$ID" == "debian"* ]]; then
-    sudo apt-get update -y
-    sudo apt-get install nginx socat curl gnupg -y
-    sudo systemctl enable nginx
-elif [[ "$ID" == "ubuntu"* ]]; then
-    sudo apt-get update -y
-    sudo apt-get install nginx socat curl gnupg -y
-    sudo systemctl enable nginx
+    yum update -y
+    packages=("nginx" "socat" "curl" "gnupg" "sudo")
+    for pkg in "${packages[@]}"; do
+        if ! rpm -q "$pkg" &>/dev/null; then
+            sudo yum install "$pkg" -y
+        fi
+    done
+    systemctl start nginx
+    systemctl enable nginx
+elif [[ "$ID" == "debian"* ]] || [[ "$ID" == "ubuntu"* ]]; then
+    apt-get update -y
+    packages=("nginx" "socat" "curl" "gnupg" "sudo")
+    for pkg in "${packages[@]}"; do
+        if ! dpkg -l | grep -q "^ii  $pkg "; then
+            apt-get install "$pkg" -y
+        fi
+    done
+    systemctl enable nginx
 else
     echo -e "${red} 该脚本仅支持 CentOS、Debian 和 Ubuntu ${reset_color}"
     exit 1
