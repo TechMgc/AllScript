@@ -51,7 +51,7 @@ xray(){
 
 #配置config.json
 uuid=$(xray uuid)
-echo "是否需要安装Warp？(输入 y 或 n): "
+echo -e -n "${blue}是否需要安装Warp？(输入 y 或 n): ${reset_color}"
 read install_warp
 
 if [ "$install_warp" = "y" ]; then
