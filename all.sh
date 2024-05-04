@@ -33,7 +33,7 @@ elif [[ "$ID" == "debian"* ]] || [[ "$ID" == "ubuntu"* ]]; then
     done
     systemctl enable nginx
 else
-    echo -e "${red} 该脚本仅支持 CentOS、Debian 和 Ubuntu ${reset_color}"
+    echo -e "${red}该脚本仅支持CentOS、Debian和Ubuntu${reset_color}"
     exit 1
 fi
 }
@@ -179,19 +179,19 @@ if [ "$install_warp" = "y" ]; then
         sudo yum update
         sudo yum install cloudflare-warp -y
     else
-        echo -e "${red} 该脚本仅支持 CentOS、Debian 和 Ubuntu ${reset_color}"
+        echo -e "${red}该脚本仅支持CentOS、Debian和Ubuntu${reset_color}"
         exit 1
     fi
     
-    echo -e "${cyan} 请输入Warp登陆模式: ${reset_color}"
-    echo -e "${cyan} 1: Warp+ Key ${reset_color}" 
-    echo -e "${cyan} 2: Zero Trust ${reset_color}"
-    echo -n -e "${cyan} 请选择: ${reset_color}"
+    echo -e "${cyan}请输入Warp登陆模式: ${reset_color}"
+    echo -e "${cyan}1: Warp+ Key${reset_color}" 
+    echo -e "${cyan}2: Zero Trust${reset_color}"
+    echo -n -e "${cyan}请选择: ${reset_color}"
     read choice
 
     case $choice in
         1)
-            echo -e "${cyan} 您选择了 Warp+ Key ${reset_color}"
+            echo -e "${cyan}您选择了 Warp+ Key${reset_color}"
             warp-cli register
             echo -n -e "${cyan}请输入Warp+ Key: ${reset_color}"
             read warpkey
@@ -201,8 +201,8 @@ if [ "$install_warp" = "y" ]; then
             warp-cli connect
             ;;
         2)
-            echo -e "${cyan} 您选择了 Zero Trust ${reset_color}"
-            echo -n -e "${cyan} 请输入您的团队名: ${reset_color}"
+            echo -e "${cyan}您选择了 Zero Trust${reset_color}"
+            echo -n -e "${cyan}请输入您的团队名: ${reset_color}"
             read teamname
             warp-cli teams-enroll $teamname
             echo -e "${cyan}******************************************************************************${reset_color}"
@@ -217,7 +217,7 @@ if [ "$install_warp" = "y" ]; then
             warp-cli account
             ;;
         *)
-            echo -e "${red} 无效的选择 ${reset_color}"
+            echo -e "${red}无效的选择${reset_color}"
             ;;
     esac
 fi
@@ -239,11 +239,11 @@ admin_pass=$(grep -oP 'Admin password: \K\S+' /usr/local/etc/cloudreve/output.tx
 admin_port=$(grep -oP 'Listening to \K\S+' /usr/local/etc/cloudreve/output.txt)
 
 # 输出默认账号、密码和端口号
-echo -e "${cyan}*********************************${reset_color}"
-echo -e "${cyan}初始管理员账号：$admin_user${reset_color}"
-echo -e "${cyan}初始管理员密码：$admin_pass${reset_color}"
-echo -e "${cyan}初始端口号：$admin_port${reset_color}"
-echo -e "${cyan}*********************************${reset_color}"
+echo -e "${cyan}********** Cloudreve账户信息 **********${reset_color}"
+echo -e "${cyan}*   初始管理员账号：$admin_user${reset_color}"
+echo -e "${cyan}*   初始管理员密码：$admin_pass${reset_color}"
+echo -e "${cyan}*   初始端口号：$admin_port${reset_color}"
+echo -e "${cyan}**************************************${reset_color}"
 echo -e "${cyan}请保存账号、密码、端口号后按回车键继续...${reset_color}"
 read -p ""
 
@@ -291,23 +291,23 @@ else
     ~/.acme.sh/acme.sh --upgrade --auto-upgrade
 fi
 #设置dns服务商
-echo -e "${cyan} 请选择域名DNS服务商: ${reset_color}"
-echo -e "${cyan} 1: Dnspod ${reset_color}"
-echo -e "${cyan} 2: Cloudflare ${reset_color}"
-echo -e "${cyan} 3: Aliyun ${reset_color}"
-echo -e "${cyan} 4: Google ${reset_color}"
-echo -n -e "${cyan} 请选择: ${reset_color}"
+echo -e "${cyan}请选择域名DNS服务商: ${reset_color}"
+echo -e "${cyan}1: Dnspod${reset_color}"
+echo -e "${cyan}2: Cloudflare${reset_color}"
+echo -e "${cyan}3: Aliyun${reset_color}"
+echo -e "${cyan}4: Google${reset_color}"
+echo -n -e "${cyan}请选择: ${reset_color}"
 read choice
 case $choice in
     1)
-        echo -e "${cyan} 您选择了Dnspod ${reset_color}"
+        echo -e "${cyan}您选择了Dnspod${reset_color}"
         echo -n -e "${cyan}请输入ID: ${reset_color}"
         read id
         echo -n -e "${cyan}请输入KEY: ${reset_color}"
         read key
         export DP_Id="$id"
         export DP_Key="$key"
-        echo -n -e "${cyan} 请输入域名: ${reset_color}"
+        echo -n -e "${cyan}请输入域名: ${reset_color}"
         read domain
         ~/.acme.sh/acme.sh --issue --dns dns_dp -d $domain -k ec-256
         ~/.acme.sh/acme.sh --install-cert -d $domain --ecc \
@@ -315,14 +315,14 @@ case $choice in
             --key-file /usr/local/etc/ssl/xray.key --reloadcmd "systemctl force-reload xray"
         ;;
     2)
-        echo -e "${cyan} 您选择了Cloudflare ${reset_color}"
+        echo -e "${cyan}您选择了Cloudflare${reset_color}"
         echo -n -e "${cyan}请输入KEY: ${reset_color}"
         read key
         echo -n -e "${cyan}请输入EMAIL: ${reset_color}"
         read email
         export CF_Key="$key"
         export CF_Email="$email"
-        echo -n -e "${cyan} 请输入域名: ${reset_color}"
+        echo -n -e "${cyan}请输入域名: ${reset_color}"
         read domain
         ~/.acme.sh/acme.sh --issue --dns dns_cf -d $domain -k ec-256
         ~/.acme.sh/acme.sh --install-cert -d $domain --ecc \
@@ -330,14 +330,14 @@ case $choice in
             --key-file /usr/local/etc/ssl/xray.key --reloadcmd "systemctl force-reload xray"
         ;;
     3)
-        echo -e "${cyan} 您选择了Aliyun ${reset_color}"
+        echo -e "${cyan}您选择了Aliyun${reset_color}"
         echo -n -e "${cyan}请输入KEY: ${reset_color}"
         read key
         echo -n -e "${cyan}请输入SECRET: ${reset_color}"
         read secret
         export Ali_Key="$key"
         export Ali_Secret="$secret"
-        echo -n -e "${cyan} 请输入域名: ${reset_color}"
+        echo -n -e "${cyan}请输入域名: ${reset_color}"
         read domain
         ~/.acme.sh/acme.sh --issue --dns dns_ali -d $domain -k ec-256
         ~/.acme.sh/acme.sh --install-cert -d $domain --ecc \
@@ -345,11 +345,11 @@ case $choice in
             --key-file /usr/local/etc/ssl/xray.key --reloadcmd "systemctl force-reload xray"
         ;;
     4)
-        echo -e "${cyan} 您选择了Google ${reset_color}"
+        echo -e "${cyan}您选择了Google${reset_color}"
         echo -n -e "${cyan}请输入API令牌: ${reset_color}"
         read api
         export GOOGLEDOMAINS_ACCESS_TOKEN="$api"
-        echo -n -e "${cyan} 请输入域名: ${reset_color}"
+        echo -n -e "${cyan}请输入域名: ${reset_color}"
         read domain
         ~/.acme.sh/acme.sh --issue --dns dns_googledomains -d $domain -k ec-256
         ~/.acme.sh/acme.sh --install-cert -d $domain --ecc \
@@ -357,7 +357,7 @@ case $choice in
             --key-file /usr/local/etc/ssl/xray.key --reloadcmd "systemctl force-reload xray"
         ;;
     *)
-        echo -e "${red} 无效的选择 ${reset_color}"
+        echo -e "${red}无效的选择 ${reset_color}"
         ;;
 esac
     
@@ -430,14 +430,18 @@ systemctl restart xray
 systemctl restart cloudreve
 
 encoded_uuid=$(echo -n "auto:$uuid@$domain:443" | base64)
-echo -e "${cyan}*************************************************************************************${reset_color}"
-echo -e "${cyan}warp端口号：$warpport${reset_color}"
-echo -e "${cyan}Zero Trust代理及端口号修改步骤：Zero Trust - Settings - WARP Client - Device settings(点击Default后面三个点，选择Configure) - Service mode(代理选择Proxy mode 端口号修改Port: Edit)${reset_color}"
-echo -e "${cyan}*************************************************************************************${reset_color}"
-echo -e "${cyan}Shadowrocket链接：vless://$encoded_uuid?obfs=none&tls=1&peer=$domain&xtls=2${reset_color}"
-echo -e "${cyan}*************************************************************************************${reset_color}"
-echo -e "${cyan}Passwall链接：vless://$uuid@$domain:443?headerType=none&type=tcp&encryption=none&fp=randomized&flow=xtls-rprx-vision&security=tls&sni=$domain#备注${reset_color}"
-echo -e "${cyan}*************************************************************************************${reset_color}"
+echo -e "${cyan}**************************************** 节点分享链接 ****************************************${reset_color}"
+echo -e "${cyan}*${reset_color}"
+echo -e "${cyan}*   warp端口号：$warpport${reset_color}"
+echo -e "${cyan}*${reset_color}"
+echo -e "${cyan}*   Zero Trust代理及端口号修改步骤: ${reset_color}"
+echo -e "${cyan}*   Zero Trust - Settings - WARP Client - Device settings(点击Default后面三个点，选择Configure) - Service mode(代理选择Proxy mode 端口号修改Port: Edit)${reset_color}"
+echo -e "${cyan}*${reset_color}"
+echo -e "${cyan}*   Shadowrocket链接：vless://$encoded_uuid?obfs=none&tls=1&peer=$domain&xtls=2${reset_color}"
+echo -e "${cyan}*${reset_color}"
+echo -e "${cyan}*   Passwall链接：vless://$uuid@$domain:443?headerType=none&type=tcp&encryption=none&fp=randomized&flow=xtls-rprx-vision&security=tls&sni=$domain#备注${reset_color}"
+echo -e "${cyan}*${reset_color}"
+echo -e "${cyan}********************************************************************************************${reset_color}"
 }
 
 #安装Alist
